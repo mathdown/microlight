@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <title>My page</title>
+
+    <!--  some embedded js -->
+    <script type="text/javascript">
+      /**
+       * Bubble-sorts the input array
+       */
+      function(input) {
+          // switches the two elems if needed
+          // returns true if switched
+          function switchEls(idx) {
+              var switched = false;
+
+              if (input[idx] < input[idx-1]) {
+                  var tmp = input[idx];
+                  input[idx] = input[idx-1];
+                  input[idx-1] = tmp;
+                  switched = true;
+              }
+
+              return switched;
+          }
+
+          var switched;
+          do {
+              switched = false;
+              for (var i = 1; i < input.length; i++) {
+                  switched |= switchEls(i);
+              }
+          } while (switched);
+
+          return input;
+      }
+    </script>
+
+    <!--  a little bit of css -->
+    <style>
+      body {
+          background-color: black;
+      }
+
+      h1 {
+          color: white;
+          font-family: monospace;
+      } 
+    </style>
+
+
+  </head>
+  <body>
+    <h1>Welcome to my page</h1>
+
+
+    <!--  and finally php -->
+    <?php 
+       // write "Hello world!" 10 times
+       for ($i = 1; $i <=10; $i++) {
+           echo "Hello world!<br/>";
+       }
+    ?>
+
+
+  </body>
+</html>

@@ -1,27 +1,21 @@
 {
-  "author": "Dmitry Prokashev <heliosframework@gmail.com>",
   "name": "microlight",
+  "version": "0.1.0",
   "description": "highlights code in any language",
-  "version": "0.0.7",
-  "keywords": [
-    "syntax",
-    "highlight",
-    "highlighting",
-    "source",
-    "code",
-    "source code",
-    "snippet",
-    "code snippet"
-  ],
+  "author": "Dmitry Prokashev <heliosframework@gmail.com>",
+  "main": "microlight.mjs",
+  "scripts": {
+    "test": "node test",
+    "lint": "standard *.mjs */*.mjs",
+    "pretest": "npm run lint",
+    "fmt": "standard --fix *.mjs */*.mjs"
+  },
   "repository": {
     "type": "git",
-    "url": "git://github.com/asvd/microlight.git"
+    "url": "git://github.com/tie/microlight.git"
   },
-  "main": "microlight.js",
-  "dependencies": {},
-  "devDependencies": {},
-  "optionalDependencies": {},
-  "engines": {
-    "node": "*"
+  "devDependencies": {
+    "m.test": "0.0.57",
+    "standard": "^12.0.1"
   }
 }

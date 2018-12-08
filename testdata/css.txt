@@ -1,0 +1,6 @@
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : #C4E4E8;
+    color            : #052C36;    
+}
