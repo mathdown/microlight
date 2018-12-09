@@ -5,14 +5,52 @@
  *
  * @license MIT, see http://github.com/asvd/microlight
  * @copyright 2016 asvd <heliosframework@gmail.com>
+ *
  * Modified by Ivan Trubach <mr.trubach@icloud.com>
+ * All changes are public domain to the extent allowed by law.
+ * For more information, please refer to <https://unlicense.org/>
  */
 
 import { escapeHTML } from './util'
 
 const keywords = /^(a(bstract|lias|nd|rguments|rray|s(m|sert)?|uto)|b(ase|egin|ool(ean)?|reak|yte)|c(ase|atch|har|hecked|lass|lone|ompl|onst|ontinue)|de(bugger|cimal|clare|f(ault|er)?|init|l(egate|ete)?)|do|double|e(cho|ls?if|lse(if)?|nd|nsure|num|vent|x(cept|ec|p(licit|ort)|te(nds|nsion|rn)))|f(allthrough|alse|inal(ly)?|ixed|loat|or(each)?|riend|rom|unc(tion)?)|global|goto|guard|i(f|mp(lements|licit|ort)|n(it|clude(_once)?|line|out|stanceof|t(erface|ernal)?)?|s)|l(ambda|et|ock|ong)|m(icrolight|odule|utable)|NaN|n(amespace|ative|ext|ew|il|ot|ull)|o(bject|perator|r|ut|verride)|p(ackage|arams|rivate|rotected|rotocol|ublic)|r(aise|e(adonly|do|f|gister|peat|quire(_once)?|scue|strict|try|turn))|s(byte|ealed|elf|hort|igned|izeof|tatic|tring|truct|ubscript|uper|ynchronized|witch)|t(emplate|hen|his|hrows?|ransient|rue|ry|ype(alias|def|id|name|of))|u(n(checked|def(ined)?|ion|less|signed|til)|se|sing)|v(ar|irtual|oid|olatile)|w(char_t|hen|here|hile|ith)|xor|yield)$/
 
-export default (text, r = 0, g = 0, b = 0, a = 1) => {
+// https://en.wikipedia.org/wiki/Alpha_compositing#Alpha_blending
+// https://en.wikipedia.org/wiki/Transparency_%28graphic%29#Compositing_calculations
+
+// combine dst (bg) and src (fg) RGBA colors
+function blend (dst, src) {
+  const out = { r: 0, g: 0, b: 0, a: 1 }
+  if (dst.a !== 1) {
+    out.a = src.a + dst.a * (1 - src.a)
+  }
+  if (out.a !== 0) {
+    out.r = (src.r * src.a + dst.r * dst.a * (1 - src.a)) / out.a
+    out.g = (src.g * src.a + dst.g * dst.a * (1 - src.a)) / out.a
+    out.b = (src.b * src.a + dst.b * dst.a * (1 - src.a)) / out.a
+  }
+  return out
+}
+
+function hex (n) {
+  return n.toString(16).padStart(2, '0').toUpperCase()
+}
+
+// convert RGBA to RGB and return CSS color
+function rgba ({ r, g, b, a }) {
+  [ r, g, b ] = [ Math.round(r), Math.round(g), Math.round(b) ]
+  if (a === 1) {
+    return `#${hex(r)}${hex(g)}${hex(b)}`
+  }
+  a = a.toFixed(2)
+  return `rgba(${r},${g},${b},${a})`
+}
+
+const opaqueBlack = { r: 0x00, g: 0x00, b: 0x00, a: 1 }
+const transparentWhite = { r: 0xFF, g: 0xFF, b: 0xFF, a: 0 }
+
+// highlights source text using HTML spans and style attribute
+export default (text, fg = opaqueBlack, bg = transparentWhite) => {
   let output = ''
 
   let pos = 0 // current position
@@ -41,19 +79,6 @@ export default (text, r = 0, g = 0, b = 0, a = 1) => {
   // flag determining if token is multi-character
   let multichar = false
 
-  let styles = [
-    // 0: not formatted
-    '',
-    // 1: keywords
-    `text-shadow: 0px 0px 9px rgba(${r},${g},${b},${a * 0.7}), 0px 0px 2px rgba(${r},${g},${b},${a * 0.4})`,
-    // 2: punctuation
-    `opacity: .6; text-shadow: 0px 0px 7px rgba(${r},${g},${b},${a / 4}), 0px 0px 3px rgba(${r},${g},${b},${a / 4})`,
-    // 3: strings and regexps
-    `opacity: .7; text-shadow: 3px 0px 5px rgba(${r},${g},${b},${a / 5}), -3px 0px 5px rgba(${r},${g},${b},${a / 5})`,
-    // 4: comments
-    `font-style:italic; opacity: .5; text-shadow: 3px 0px 5px rgba(${r},${g},${b},${a / 4}), -3px 0px 5px rgba(${r},${g},${b},${a / 4})`
-  ]
-
   // running through characters and highlighting
   for (;;) {
     prev2 = prev1
@@ -70,6 +95,8 @@ export default (text, r = 0, g = 0, b = 0, a = 1) => {
     chr = next1
     next1 = text[++pos]
     multichar = token.length > 1
+
+    const styles = computeStyles(fg, bg)
 
     // checking if current token should be finalized
     if (!chr || // end of content
@@ -101,11 +128,10 @@ export default (text, r = 0, g = 0, b = 0, a = 1) => {
       if (token) {
         // remapping token type into style
         // (some types are highlighted similarly)
-        let style
+        let style = ''
         switch (tokenType) {
           // not formatted
           case 0:
-            style = styles[0]
             break
           // punctuation
           case 1:
@@ -204,4 +230,65 @@ export default (text, r = 0, g = 0, b = 0, a = 1) => {
     token += chr
   }
   return output
+}
+
+export function computeStyles ({ r, g, b, a }, bg) {
+  const colors = {
+    keywords: {
+      opacity: 1.0,
+      color: blend(bg, { r, g, b, a: a * 1.0 }),
+      shadow: [
+        { r, g, b, a: a * 0.7 * 1.0 },
+        { r, g, b, a: a * 0.4 * 1.0 }
+      ]
+    },
+    punctuation: {
+      opacity: 0.6,
+      color: blend(bg, { r, g, b, a: a * 0.6 }),
+      shadow: [
+        { r, g, b, a: a * 0.25 * 0.6 },
+        { r, g, b, a: a * 0.25 * 0.6 }
+      ]
+    },
+    strings: {
+      opacity: 0.7,
+      color: blend(bg, { r, g, b, a: a * 0.7 }),
+      shadow: [
+        { r, g, b, a: a * 0.2 * 0.7 },
+        { r, g, b, a: a * 0.2 * 0.7 }
+      ]
+    },
+    comments: {
+      opacity: 0.5,
+      color: blend(bg, { r, g, b, a: a * 0.5 }),
+      shadow: [
+        { r, g, b, a: a * 0.25 * 0.5 },
+        { r, g, b, a: a * 0.25 * 0.5 }
+      ]
+    }
+  }
+
+  // convert to valid CSS colors
+  for (const type in colors) {
+    colors[type].color = rgba(colors[type].color)
+    const shadows = colors[type].shadow
+    for (const index in shadows) {
+      shadows[index] = rgba(shadows[index])
+    }
+  }
+
+  const styles = [
+    // 0: not formatted
+    '',
+    // 1: keywords
+    `color: ${colors.keywords.color}; text-shadow: 0px 0px 9px ${colors.keywords.shadow[0]}, 0px 0px 2px ${colors.keywords.shadow[1]}`,
+    // 2: punctuation
+    `color: ${colors.punctuation.color}; text-shadow: 0px 0px 7px ${colors.punctuation.shadow[0]}, 0px 0px 3px ${colors.punctuation.shadow[1]}`,
+    // 3: strings and regexps
+    `color: ${colors.strings.color}; text-shadow: 3px 0px 5px ${colors.strings.shadow[0]}, -3px 0px 5px ${colors.strings.shadow[1]}`,
+    // 4: comments
+    `color: ${colors.comments.color}; text-shadow: 3px 0px 5px ${colors.comments.shadow[0]}, -3px 0px 5px ${colors.comments.shadow[1]}; font-style: italic`
+  ]
+
+  return styles
 }

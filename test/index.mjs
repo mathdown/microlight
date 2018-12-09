@@ -4,7 +4,7 @@ import path from 'path'
 import mtest from 'm.test'
 import dirname from './dirname'
 import { strict } from 'assert'
-import { predoc } from '../util'
+import { predoc, color } from '../util'
 
 const { test } = mtest
 const { readFileSync: readFile } = fs
@@ -12,23 +12,19 @@ const { readFileSync: readFile } = fs
 const read = (fp) => readFile(path.join(dirname, `testdata/${fp}`)).toString()
 
 test('Samples', () => {
-  test('HTML, CSS, JS, PHP', () => {
-    const text = read('html-css-js-php.txt')
-    const expect = read('html-css-js-php.html')
-    const jsonOpt = read('html-css-js-php.json')
-    const options = JSON.parse(jsonOpt)
-    const [ r, g, b, a ] = options.color.map(Number)
-    const result = predoc(hl(text, r, g, b, a), options.bg, options.fg)
+  function testFromFiles (name) {
+    const text = read(name + '.txt')
+    const expect = read(name + '.html')
+    const jsonOpt = read(name + '.json')
+    const { bg, fg } = JSON.parse(jsonOpt)
+    const result = predoc(hl(text, color(bg), color(fg)), bg, fg)
     strict.equal(result, expect)
+  }
+  test('HTML, CSS, JS, PHP', () => {
+    testFromFiles('html-css-js-php')
   })
   test('CSS', () => {
-    const text = read('css.txt')
-    const expect = read('css.html')
-    const jsonOpt = read('css.json')
-    const options = JSON.parse(jsonOpt)
-    const [ r, g, b, a ] = options.color.map(Number)
-    const result = predoc(hl(text, r, g, b, a), options.bg, options.fg)
-    strict.equal(result, expect)
+    testFromFiles('css')
   })
 })
 
