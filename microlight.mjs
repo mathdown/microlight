@@ -1,7 +1,7 @@
 /**
  * @fileoverview microlight.mjs - syntax highlightning library
- * @version 0.1.0
- * Based on 0.0.7
+ * @version based on 0.0.7, see package.json and git tags for current version number
+ * 
  *
  * @license MIT, see http://github.com/asvd/microlight
  * @copyright 2016 asvd <heliosframework@gmail.com>
