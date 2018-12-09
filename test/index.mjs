@@ -1,13 +1,15 @@
 import hl from '..'
 import fs from 'fs'
+import path from 'path'
 import mtest from 'm.test'
+import dirname from './dirname'
 import { strict } from 'assert'
 import { predoc } from '../util'
 
 const { test } = mtest
 const { readFileSync: readFile } = fs
 
-const read = (path) => readFile(`testdata/${path}`, 'utf8')
+const read = (fp) => readFile(path.join(dirname, `testdata/${fp}`)).toString()
 
 test('Samples', () => {
   test('HTML, CSS, JS, PHP', () => {
