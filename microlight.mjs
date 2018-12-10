@@ -155,7 +155,7 @@ const keywords = {
   'transient': true,
   'true': true,
   'try': true,
-  'type': true,
+  'type': false, // TODO: update tests and enable
   'typealias': true,
   'typedef': true,
   'typeid': true,
