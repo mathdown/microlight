@@ -7,7 +7,6 @@
   "scripts": {
     "test": "node test",
     "lint": "standard *.mjs */*.mjs",
-    "pretest": "npm run lint",
     "fmt": "standard --fix *.mjs */*.mjs"
   },
   "repository": {
