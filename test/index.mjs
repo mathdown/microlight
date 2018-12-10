@@ -17,7 +17,7 @@ test('Samples', () => {
     const expect = read(name + '.html')
     const jsonOpt = read(name + '.json')
     const { bg, fg } = JSON.parse(jsonOpt)
-    const result = predoc(hl(text, color(bg), color(fg)), bg, fg)
+    const result = predoc(hl(text, color(fg), color(bg)), bg, fg)
     strict.equal(result, expect)
   }
   test('HTML, CSS, JS, PHP', () => {
