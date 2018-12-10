@@ -182,6 +182,7 @@ const keywords = {
   'with': true,
   'xor': true,
   'yield': true,
+  '': false // for diffs, because linter warns on trailing comma
 }
 
 // https://en.wikipedia.org/wiki/Alpha_compositing#Alpha_blending
