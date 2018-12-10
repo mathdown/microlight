@@ -249,6 +249,8 @@ export default (text, fg = opaqueBlack, bg = transparentWhite) => {
   // flag determining if token is multi-character
   let multichar = false
 
+  const styles = computeStyles(fg, bg)
+
   // running through characters and highlighting
   for (;;) {
     prev2 = prev1
@@ -265,8 +267,6 @@ export default (text, fg = opaqueBlack, bg = transparentWhite) => {
     chr = next1
     next1 = text[++pos]
     multichar = token.length > 1
-
-    const styles = computeStyles(fg, bg)
 
     // checking if current token should be finalized
     if (!chr || // end of content
