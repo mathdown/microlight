@@ -225,7 +225,7 @@ export default (text, fg = opaqueBlack, bg = transparentWhite) => {
 
   let pos = 0 // current position
   let next1 = text[0] // next character
-  let chr // current character
+  let chr = -1 // current character
   let prev1 // previous character
   let prev2 // the one before the previous
   let token = '' // current token content
