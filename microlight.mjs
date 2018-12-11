@@ -225,7 +225,7 @@ export default (text, fg = opaqueBlack, bg = transparentWhite) => {
 
   let pos = 0 // current position
   let next1 = text[0] // next character
-  let chr = -1 // current character
+  let chr // current character
   let prev1 // previous character
   let prev2 // the one before the previous
   let token = '' // current token content
@@ -268,133 +268,171 @@ export default (text, fg = opaqueBlack, bg = transparentWhite) => {
     next1 = text[++pos]
     multichar = token.length > 1
 
+    let finalize = false
+
     // checking if current token should be finalized
-    if (!chr || // end of content
-            // types 9-10 (single-line comments) end with a
-            // newline
-            (tokenType > 8 && chr === '\n') ||
-            [ // finalize conditions for other token types
-              // 0: whitespaces
-              /\S/.test(chr), // merged together
-              // 1: operators
-              1, // consist of a single character
-              // 2: braces
-              1, // consist of a single character
-              // 3: (key)word
-              !/[$\w]/.test(chr),
-              // 4: regex
-              (prev1 === '/' || prev1 === '\n') && multichar,
-              // 5: string with "
-              prev1 === '"' && multichar,
-              // 6: string with '
-              prev1 === "'" && multichar,
-              // 7: xml comment
-              text[pos - 4] + prev2 + prev1 === '-->',
-              // 8: multiline comment
-              prev2 + prev1 === '*/'
-            ][tokenType]
-    ) {
-      // appending the token to the result
-      if (token) {
-        // remapping token type into style
-        // (some types are highlighted similarly)
-        let style = ''
-        switch (tokenType) {
-          // not formatted
-          case 0:
-            break
-          // punctuation
-          case 1:
-          case 2:
-            style = styles[2]
-            break
-          // (key)word
-          case 3:
-            if (keywords[token]) {
-              style = styles[1]
-            } else {
-              style = styles[0]
-            }
-            break
-          // regex and strings
-          case 4:
-          case 5:
-          case 6:
-            style = styles[3]
-            break
-          // comments
-          case 7:
-          case 8:
-          case 9:
-          case 10:
-            style = styles[4]
-            break
-        }
-        const safeToken = escapeHTML(token)
-        if (style !== '') {
-          output += `<span style="${style}">${safeToken}</span>`
-        } else {
-          output += safeToken
-        }
+    if (!chr) {
+      // end of content
+      finalize = true
+    } else {
+      switch (tokenType) {
+        case 0: // whitespaces
+          // non-whitespace
+          if (/\S/.test(chr)) {
+            finalize = true
+          }
+          break
+        case 1: // operators
+          // consist of a single character
+          finalize = true
+          break
+        case 2: // braces
+          // consist of a single character
+          finalize = true
+          break
+        case 3: // (key)word
+          finalize = !/[$\w]/.test(chr),
+          break
+        case 4: // regex
+          if (multichar && (prev1 === '/' || prev1 === '\n')) {
+            finalize = true
+          }
+          break
+        case 5: // string with "
+          if (multichar && (prev1 === '"')) {
+            finalize = true
+          }
+          break
+        case 6: // string with '
+          if (multichar && prev1 === "'") {
+            finalize = true
+          }
+          break
+        case 7: // xml comment
+          if (text[pos - 4] + prev2 + prev1 === '-->') {
+            finalize = true
+          }
+          break
+        case 8: // multiline comment
+          if (prev2 + prev1 === '*/') {
+            finalize = true
+          }
+          break
+        case 9:
+        case 10:
+          // types 9-10 (single-line comments) end with a newline
+          if (tokenType > 8 && chr === '\n') {
+            finalize = true
+          }
+          break
       }
+    }
 
-      // saving the previous token type
-      // (skipping whitespaces and comments)
-      if (tokenType > 0 && tokenType < 7) {
-        lastTokenType = tokenType
+    if (!finalize) {
+      token += chr
+      continue
+    }
+
+    // appending the token to the result
+    if (token) {
+      // remapping token type into style
+      // (some types are highlighted similarly)
+      let style = ''
+      switch (tokenType) {
+        // not formatted
+        case 0:
+          break
+        // punctuation
+        case 1:
+        case 2:
+          style = styles[2]
+          break
+        // (key)word
+        case 3:
+          if (keywords[token]) {
+            style = styles[1]
+          } else {
+            style = styles[0]
+          }
+          break
+        // regex and strings
+        case 4:
+        case 5:
+        case 6:
+          style = styles[3]
+          break
+        // comments
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+          style = styles[4]
+          break
       }
-
-      // initializing a new token
-      token = ''
-
-      // determining the new token type
-
-      // 10: hash-style comment
-      if (chr === '#') {
-        tokenType = 10
-      } else
-      //  9: single-line comment
-      if (chr + next1 === '//') {
-        tokenType = 9
-      } else
-      //  8: multiline comment
-      if (chr + next1 === '/*') {
-        tokenType = 8
-      } else
-      //  7: xml comment
-      if (chr + next1 + text[pos + 1] + text[pos + 2] === '<!--') {
-        tokenType = 7
-      } else
-      //  6: string with '
-      if (chr === `'`) {
-        tokenType = 6
-      } else
-      //  5: string with "
-      if (chr === `"`) {
-        tokenType = 5
-      } else
-      //  4: regex
-      if (chr === '/' &&
-                // previous token was an opening brace or an operator (otherwise division, not a regex)
-                (lastTokenType < 2) &&
-                // workaround for xml closing tags
-                prev1 !== '<') {
-        tokenType = 4
-      } else
-      //  3: (key)word
-      if (/[$\w]/.test(chr)) {
-        tokenType = 3
-      } else
-      //  2: closing brace
-      if (/[\])]/.test(chr)) {
-        tokenType = 2
-      } else
-      //  1: operator or braces
-      if (/[/{}[(\-+*=<>:;|\\.,?!&@~]/.test(chr)) {
-        tokenType = 1
+      const safeToken = escapeHTML(token)
+      if (style !== '') {
+        output += `<span style="${style}">${safeToken}</span>`
       } else {
-        tokenType = 0
+        output += safeToken
       }
+    }
+
+    // saving the previous token type
+    // (skipping whitespaces and comments)
+    if (tokenType > 0 && tokenType < 7) {
+      lastTokenType = tokenType
+    }
+
+    // initializing a new token
+    token = ''
+
+    // determining the new token type
+
+    // 10: hash-style comment
+    if (chr === '#') {
+      tokenType = 10
+    } else
+    //  9: single-line comment
+    if (chr + next1 === '//') {
+      tokenType = 9
+    } else
+    //  8: multiline comment
+    if (chr + next1 === '/*') {
+      tokenType = 8
+    } else
+    //  7: xml comment
+    if (chr + next1 + text[pos + 1] + text[pos + 2] === '<!--') {
+      tokenType = 7
+    } else
+    //  6: string with '
+    if (chr === `'`) {
+      tokenType = 6
+    } else
+    //  5: string with "
+    if (chr === `"`) {
+      tokenType = 5
+    } else
+    //  4: regex
+    if (chr === '/' &&
+              // previous token was an opening brace or an operator (otherwise division, not a regex)
+              (lastTokenType < 2) &&
+              // workaround for xml closing tags
+              prev1 !== '<') {
+      tokenType = 4
+    } else
+    //  3: (key)word
+    if (/[$\w]/.test(chr)) {
+      tokenType = 3
+    } else
+    //  2: closing brace
+    if (/[\])]/.test(chr)) {
+      tokenType = 2
+    } else
+    //  1: operator or braces
+    if (/[/{}[(\-+*=<>:;|\\.,?!&@~]/.test(chr)) {
+      tokenType = 1
+    } else {
+      tokenType = 0
     }
 
     token += chr
