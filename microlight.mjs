@@ -291,7 +291,9 @@ export default (text, fg = opaqueBlack, bg = transparentWhite) => {
           finalize = true
           break
         case 3: // (key)word
-          finalize = !/[$\w]/.test(chr),
+          if (!/[$\w]/.test(chr)) {
+            finalize = true
+          }
           break
         case 4: // regex
           if (multichar && (prev1 === '/' || prev1 === '\n')) {
