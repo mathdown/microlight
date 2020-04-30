@@ -1,11 +1,11 @@
 {
   "name": "microlight",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "highlights code in any language",
   "author": "Dmitry Prokashev <heliosframework@gmail.com>",
   "main": "microlight.mjs",
   "scripts": {
-    "test": "node test",
+    "test": "node test/index.mjs",
     "lint": "standard *.mjs */*.mjs",
     "fmt": "standard --fix *.mjs */*.mjs"
   },

@@ -1,4 +1,4 @@
 language: node_js
-node_js: [ "10" ]
+node_js: [ "10", "11", "12", "13" ]
 env: [ NODE_OPTIONS=--experimental-modules ]
 cache: npm

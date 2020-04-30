@@ -11,7 +11,7 @@
  * For more information, please refer to <https://unlicense.org/>
  */
 
-import { escapeHTML } from './util'
+import { escapeHTML } from './util.mjs'
 
 const keywords = {
   'abstract': true,

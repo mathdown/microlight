@@ -1,10 +1,10 @@
-import hl from '..'
+import hl from '../microlight.mjs'
 import fs from 'fs'
 import path from 'path'
 import mtest from 'm.test'
-import dirname from './dirname'
+import dirname from './dirname.js'
 import { strict } from 'assert'
-import { predoc, color } from '../util'
+import { predoc, color } from '../util.mjs'
 
 const { test } = mtest
 const { readFileSync: readFile } = fs

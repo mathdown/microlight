@@ -1,7 +1,7 @@
 /* gentest (re)generates some of the files in testdata */
 
-import highlight from '.'
-import { predoc, color } from './util'
+import highlight from './microlight.mjs'
+import { predoc, color } from './util.mjs'
 import fs from 'fs'
 
 const f = process.argv[2]
