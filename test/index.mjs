@@ -1,38 +1,38 @@
 import hl from '../microlight.mjs'
+import util from './util.mjs'
+
+import mtest from 'm.test'
+import snapshot from '@mathdown/snapshot'
+import { strict } from 'assert'
+
 import fs from 'fs'
 import path from 'path'
-import mtest from 'm.test'
-import dirname from './dirname.js'
-import { strict } from 'assert'
-import { predoc, color } from '../util.mjs'
+import url from 'url'
 
-const { test } = mtest
-const { readFileSync: readFile } = fs
+const dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
-const read = (fp) => readFile(path.join(dirname, `testdata/${fp}`)).toString()
-
-test('Samples', () => {
-  function testFromFiles (name) {
-    const text = read(name + '.txt')
-    const expect = read(name + '.html')
-    const jsonOpt = read(name + '.json')
-    const { bg, fg } = JSON.parse(jsonOpt)
-    const result = predoc(hl(text, color(fg), color(bg)), bg, fg)
-    strict.equal(result, expect)
+mtest.test('Snapshots', () => {
+  const snapshots = [
+    [ '#293c41', '#B5F7FF', 'html-css-js-php' ],
+    [ '#1F2F33', '#B5F7FF', 'css' ],
+  ]
+  for (const [bg, fg, name] of snapshots) {
+    mtest.test(name, () => {
+      const [ input, output ] = [ `${name}.txt`, `${name}.html` ]
+      const filepath = path.join(dirname, 'testdata', input)
+      const text = fs.readFileSync(filepath).toString()
+      const code = hl(text, util.parseHexColor(fg), util.parseHexColor(bg))
+      const value = util.formatDoc(code, bg, fg)
+      snapshot(value, output, { dirname })
+    })
   }
-  test('HTML, CSS, JS, PHP', () => {
-    testFromFiles('html-css-js-php')
-  })
-  test('CSS', () => {
-    testFromFiles('css')
-  })
 })
 
-test('Core', () => {
-  test('Returns empty string on empty input', () => {
+mtest.test('Behavior', () => {
+  mtest.test('Returns empty string on empty input', () => {
     strict.equal(hl(''), '')
   })
-  test('ASCII whitespaces are not wrapped in span tag', () => {
+  mtest.test('ASCII whitespaces are not wrapped in span tag', () => {
     const spaces = '\u0009\u000A\u000B\u000C\u000D\u0020\u0085\u00A0'
     strict.equal(hl(spaces), spaces)
   })

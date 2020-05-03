@@ -11,8 +11,6 @@
  * For more information, please refer to <https://unlicense.org/>
  */
 
-import { escapeHTML } from './util.mjs'
-
 const keywords = {
   'abstract': true,
   'alias': true,
@@ -182,7 +180,6 @@ const keywords = {
   'with': true,
   'xor': true,
   'yield': true,
-  '': false // for diffs, because linter warns on trailing comma
 }
 
 // https://en.wikipedia.org/wiki/Alpha_compositing#Alpha_blending
@@ -442,7 +439,7 @@ export default (text, fg = opaqueBlack, bg = transparentWhite) => {
   return output
 }
 
-export function computeStyles ({ r, g, b, a }, bg) {
+function computeStyles ({ r, g, b, a }, bg) {
   const colors = {
     keywords: {
       opacity: 1.0,
@@ -501,4 +498,20 @@ export function computeStyles ({ r, g, b, a }, bg) {
   ]
 
   return styles
+}
+
+function escapeHTML (s) {
+  const entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;',
+  }
+  return s.replace(/[&<>"'`=/]/g, (s) => {
+    return entityMap[s]
+  })
 }

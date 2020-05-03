@@ -1,21 +1,4 @@
-const entityMap = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-  '/': '&#x2F;',
-  '`': '&#x60;',
-  '=': '&#x3D;'
-}
-
-export function escapeHTML (s) {
-  return s.replace(/[&<>"'`=/]/g, (s) => {
-    return entityMap[s]
-  })
-}
-
-export function color (hex) {
+export function parseHexColor(hex) {
   const c = {
     r: Number('0x' + hex.slice(1, 3)),
     g: Number('0x' + hex.slice(3, 5)),
@@ -29,7 +12,7 @@ export function color (hex) {
   return c
 }
 
-export function predoc (code, bg, fg) {
+export function formatDoc(code, bg, fg) {
   const style = `<style>
     :root
     { margin:0 auto
@@ -43,4 +26,9 @@ export function predoc (code, bg, fg) {
     }
   </style>`
   return `<!doctype html><title>test case</title>${style}<pre>${code}</pre>\n`
+}
+
+export default {
+  parseHexColor,
+  formatDoc,
 }
